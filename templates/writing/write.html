@@ -1,0 +1,578 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if post %}글 수정{% else %}글 작성{% endif %}</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/structure.css' %}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/write.css' %}">
+</head>
+<body>
+    <form method="post" enctype="multipart/form-data" id="writeForm">
+        {% csrf_token %}
+        <input type="hidden" name="content" id="contentInput">
+
+        <!-- 상단 헤더 바 -->
+        <header class="write-header">
+            <div class="write-header-left">
+                <a href="{% url 'manage' %}" class="back-btn" title="나가기">
+                    <span class="material-icons-outlined">arrow_back</span>
+                </a>
+                <span class="header-title">{% if post %}글 수정{% else %}새 글 작성{% endif %}</span>
+            </div>
+            <div class="write-header-right">
+                <button type="button" class="btn-header btn-preview" onclick="openPreview()">
+                    <span class="material-icons-outlined" style="font-size:18px;vertical-align:middle;margin-right:2px;">visibility</span> 미리보기
+                </button>
+                <button type="button" class="btn-header btn-draft" onclick="saveDraft()">임시저장</button>
+                <button type="submit" class="btn-header btn-publish">{% if post %}수정 완료{% else %}발행{% endif %}</button>
+                <button type="button" class="btn-header btn-settings-toggle" onclick="toggleSettings()" title="설정">
+                    <span class="material-icons-outlined">settings</span>
+                </button>
+                <a href="{% url 'logout' %}" class="btn-header btn-logout" title="로그아웃">
+                    <span class="material-icons-outlined" style="font-size:18px;vertical-align:middle;">logout</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- 메인 레이아웃 -->
+        <div class="write-layout">
+            <!-- 에디터 영역 -->
+            <main class="write-main">
+                <div class="editor-wrap">
+                    <input type="text" name="title" class="title-input" placeholder="제목을 입력하세요"
+                           value="{{ post.title|default:'' }}" required>
+                    <div class="title-divider"></div>
+                    <div id="editorjs"></div>
+                </div>
+            </main>
+
+            <!-- 설정 사이드 패널 -->
+            <aside class="write-sidebar" id="settingsPanel">
+                <div class="sidebar-inner">
+                    <h6 class="sidebar-title">발행 설정</h6>
+
+                    <!-- 공개 설정 -->
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <span class="material-icons-outlined">visibility</span> 공개 설정
+                        </label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="publish_type" id="pub_private" value="private"
+                                   {% if not post or not post.is_published %}checked{% endif %}>
+                            <label class="btn btn-outline-secondary btn-sm" for="pub_private">비공개</label>
+                            <input type="radio" class="btn-check" name="publish_type" id="pub_public" value="public"
+                                   {% if post and post.is_published %}checked{% endif %}>
+                            <label class="btn btn-outline-secondary btn-sm" for="pub_public">공개</label>
+                        </div>
+                        <input type="hidden" name="is_published" id="is_published_hidden">
+                    </div>
+
+                    <!-- 배치 -->
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <span class="material-icons-outlined">dashboard</span> 배치
+                        </label>
+                        <select name="placement" class="form-select form-select-sm">
+                            <option value="none" {% if not post or post.placement == 'none' %}selected{% endif %}>배치 안함</option>
+                            <option value="main" {% if post and post.placement == 'main' %}selected{% endif %}>메인 페이지</option>
+                        </select>
+                    </div>
+
+                    <!-- 카테고리 -->
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <span class="material-icons-outlined">folder</span> 카테고리
+                        </label>
+                        <select name="category" class="form-select form-select-sm">
+                            <option value="">선택 안함</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}"
+                                    {% if post and post.category_id == cat.id %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- 태그 -->
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <span class="material-icons-outlined">sell</span> 태그
+                        </label>
+                        <div class="tag-input-wrap">
+                            <input type="text" class="form-control form-control-sm" id="tagInput"
+                                   placeholder="태그 입력 후 Enter" onkeydown="addTagByEnter(event)">
+                        </div>
+                        <div class="selected-tags" id="selectedTags">
+                            {% if post %}
+                            {% for tag in post.tags.all %}
+                            <span class="tag-chip">
+                                {{ tag.name }}
+                                <input type="hidden" name="tags" value="{{ tag.id }}">
+                                <button type="button" class="tag-remove" onclick="removeTag(this)">&times;</button>
+                            </span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="available-tags" id="availableTags">
+                            {% for tag in tags %}
+                            <button type="button" class="tag-option" data-id="{{ tag.id }}" data-name="{{ tag.name }}"
+                                    onclick="selectTag(this)">{{ tag.name }}</button>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- 썸네일 -->
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <span class="material-icons-outlined">image</span> 썸네일
+                        </label>
+                        <div class="thumbnail-area" id="thumbnailArea" onclick="document.getElementById('thumbnail').click()">
+                            {% if post and post.thumbnail %}
+                            <img src="{{ post.thumbnail.url }}" alt="썸네일" class="thumbnail-preview">
+                            {% else %}
+                            <div class="thumbnail-placeholder">
+                                <span class="material-icons-outlined">add_photo_alternate</span>
+                                <span>이미지 업로드</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <input type="file" name="thumbnail" id="thumbnail" accept="image/*"
+                               style="display:none" onchange="previewThumbnail(this)">
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </form>
+
+    <!-- 미리보기 오버레이 -->
+    <div class="preview-overlay" id="previewOverlay">
+        <div class="preview-header">
+            <span class="preview-header-title">미리보기</span>
+            <button type="button" class="preview-close" onclick="closePreview()">
+                <span class="material-icons-outlined">close</span>
+            </button>
+        </div>
+        <div class="preview-body">
+            <article class="preview-article" id="previewContent"></article>
+        </div>
+    </div>
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+    <!-- Editor.js Core + Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@2.28.2/dist/editorjs.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@2.8.1/dist/header.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/list@1.8.0/dist/bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/image@2.8.2/dist/bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/table@2.3.0/dist/table.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@2.6.0/dist/quote.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/code@2.8.0/dist/bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/delimiter@1.4.0/dist/delimiter.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/inline-code@1.5.0/dist/inline-code.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/marker@1.4.0/dist/marker.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/embed@2.7.0/dist/embed.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/checklist@1.5.0/dist/bundle.js"></script>
+
+    <script>
+        // 기존 데이터 로드
+        let savedData = null;
+        {% if post and post.content %}
+        try {
+            savedData = JSON.parse('{{ post.content|escapejs }}');
+        } catch(e) {
+            savedData = null;
+        }
+        {% endif %}
+
+        // Editor.js 초기화
+        const editor = new EditorJS({
+            holder: 'editorjs',
+            placeholder: '/ 를 입력하여 블록을 추가하세요...',
+            data: savedData || {},
+            tools: {
+                header: {
+                    class: Header,
+                    inlineToolbar: true,
+                    config: {
+                        placeholder: '제목 입력...',
+                        levels: [2, 3, 4],
+                        defaultLevel: 2
+                    },
+                    shortcut: 'CMD+SHIFT+H'
+                },
+                list: {
+                    class: List,
+                    inlineToolbar: true,
+                    config: {
+                        defaultStyle: 'unordered'
+                    }
+                },
+                checklist: {
+                    class: Checklist,
+                    inlineToolbar: true
+                },
+                image: {
+                    class: ImageTool,
+                    config: {
+                        endpoints: {
+                            byFile: '{% url "image_upload" %}',
+                        },
+                        field: 'file',
+                        types: 'image/*',
+                        captionPlaceholder: '이미지 설명 입력...',
+                    }
+                },
+                table: {
+                    class: Table,
+                    inlineToolbar: true,
+                    config: {
+                        rows: 3,
+                        cols: 3,
+                        withHeadings: true,
+                    }
+                },
+                quote: {
+                    class: Quote,
+                    inlineToolbar: true,
+                    config: {
+                        quotePlaceholder: '인용문 입력...',
+                        captionPlaceholder: '출처 입력...',
+                    }
+                },
+                code: {
+                    class: CodeTool,
+                    config: {
+                        placeholder: '코드를 입력하세요...'
+                    }
+                },
+                delimiter: Delimiter,
+                embed: {
+                    class: Embed,
+                    config: {
+                        services: {
+                            youtube: true,
+                            vimeo: true,
+                        }
+                    }
+                },
+                inlineCode: InlineCode,
+                marker: Marker,
+            },
+            i18n: {
+                messages: {
+                    ui: {
+                        "blockTunes": {
+                            "toggler": { "Click to tune": "설정", "or drag to move": "또는 드래그하여 이동" }
+                        },
+                        "inlineToolbar": { "converter": { "Convert to": "변환" } },
+                        "toolbar": { "toolbox": { "Add": "추가", "Filter": "검색" } },
+                        "popover": { "Filter": "검색", "Nothing found": "결과 없음" },
+                    },
+                    toolNames: {
+                        "Text": "텍스트", "Heading": "제목", "List": "리스트",
+                        "Checklist": "체크리스트", "Quote": "인용", "Code": "코드",
+                        "Delimiter": "구분선", "Table": "표", "Image": "이미지",
+                        "Embed": "임베드", "Bold": "굵게", "Italic": "기울임",
+                        "Marker": "형광펜", "InlineCode": "인라인 코드",
+                    },
+                    tools: {
+                        "header": { "Heading 2": "제목 2", "Heading 3": "제목 3", "Heading 4": "제목 4" },
+                        "list": { "Ordered": "순서 있는 리스트", "Unordered": "순서 없는 리스트" },
+                        "stub": { "The block can not be displayed correctly.": "이 블록을 표시할 수 없습니다." },
+                    },
+                    blockTunes: {
+                        "delete": { "Delete": "삭제", "Click to delete": "클릭하여 삭제" },
+                        "moveUp": { "Move up": "위로 이동" },
+                        "moveDown": { "Move down": "아래로 이동" },
+                    },
+                }
+            },
+        });
+
+        // 폼 제출 시 Editor.js 데이터 저장
+        document.getElementById('writeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const isPublic = document.getElementById('pub_public').checked;
+            document.getElementById('is_published_hidden').value = isPublic ? 'on' : '';
+
+            const outputData = await editor.save();
+            document.getElementById('contentInput').value = JSON.stringify(outputData);
+            this.submit();
+        });
+
+        // 임시저장
+        async function saveDraft() {
+            document.getElementById('pub_private').checked = true;
+            document.getElementById('is_published_hidden').value = '';
+
+            const outputData = await editor.save();
+            document.getElementById('contentInput').value = JSON.stringify(outputData);
+            document.getElementById('writeForm').submit();
+        }
+
+        // 설정 패널 토글
+        function toggleSettings() {
+            document.getElementById('settingsPanel').classList.toggle('open');
+        }
+
+        // 썸네일 미리보기
+        function previewThumbnail(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('thumbnailArea').innerHTML =
+                        `<img src="${e.target.result}" alt="썸네일" class="thumbnail-preview">`;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 태그
+        function selectTag(btn) {
+            const id = btn.dataset.id, name = btn.dataset.name;
+            if (document.querySelector(`#selectedTags input[value="${id}"]`)) return;
+            const chip = document.createElement('span');
+            chip.className = 'tag-chip';
+            chip.innerHTML = `${name}<input type="hidden" name="tags" value="${id}"><button type="button" class="tag-remove" onclick="removeTag(this)">&times;</button>`;
+            document.getElementById('selectedTags').appendChild(chip);
+        }
+
+        function removeTag(btn) { btn.parentElement.remove(); }
+
+        function addTagByEnter(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const name = e.target.value.trim();
+                if (!name) return;
+                const existing = document.querySelector(`#availableTags .tag-option[data-name="${name}"]`);
+                if (existing) selectTag(existing);
+                e.target.value = '';
+            }
+        }
+
+        // 미리보기
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderBlocks(blocks) {
+            return blocks.map(block => {
+                const d = block.data || {};
+                switch (block.type) {
+                    case 'paragraph':
+                        return `<p>${d.text || ''}</p>`;
+                    case 'header':
+                        return `<h${d.level || 2}>${d.text || ''}</h${d.level || 2}>`;
+                    case 'list': {
+                        const tag = d.style === 'ordered' ? 'ol' : 'ul';
+                        const items = (d.items || []).map(i => `<li>${i}</li>`).join('');
+                        return `<${tag}>${items}</${tag}>`;
+                    }
+                    case 'checklist': {
+                        const items = (d.items || []).map(i =>
+                            `<div class="pv-checklist-item"><input type="checkbox" disabled ${i.checked ? 'checked' : ''}> ${i.text || ''}</div>`
+                        ).join('');
+                        return `<div class="pv-checklist">${items}</div>`;
+                    }
+                    case 'image': {
+                        const url = (d.file || {}).url || '';
+                        const caption = d.caption || '';
+                        let cls = [];
+                        if (d.stretched) cls.push('stretched');
+                        if (d.withBorder) cls.push('bordered');
+                        if (d.withBackground) cls.push('with-bg');
+                        return `<figure class="pv-image ${cls.join(' ')}"><img src="${escapeHtml(url)}" alt="${escapeHtml(caption)}">${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`;
+                    }
+                    case 'table': {
+                        const rows = d.content || [];
+                        const wh = d.withHeadings;
+                        let html = '<table class="pv-table">';
+                        rows.forEach((row, i) => {
+                            if (i === 0 && wh) {
+                                html += '<thead><tr>' + row.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+                            } else {
+                                html += '<tr>' + row.map(c => `<td>${c}</td>`).join('') + '</tr>';
+                            }
+                        });
+                        if (wh && rows.length > 1) html += '</tbody>';
+                        html += '</table>';
+                        return html;
+                    }
+                    case 'quote':
+                        return `<blockquote><p>${d.text || ''}</p>${d.caption ? `<cite>${d.caption}</cite>` : ''}</blockquote>`;
+                    case 'code':
+                        return `<pre><code>${escapeHtml(d.code || '')}</code></pre>`;
+                    case 'delimiter':
+                        return '<hr>';
+                    case 'embed':
+                        return `<div class="pv-embed"><iframe src="${escapeHtml(d.embed || '')}" frameborder="0" allowfullscreen></iframe>${d.caption ? `<p>${d.caption}</p>` : ''}</div>`;
+                    default:
+                        return '';
+                }
+            }).join('\n');
+        }
+
+        async function openPreview() {
+            const data = await editor.save();
+            const title = document.querySelector('.title-input').value || '제목 없음';
+            const html = `<h1 class="pv-title">${escapeHtml(title)}</h1><div class="pv-content">${renderBlocks(data.blocks || [])}</div>`;
+            document.getElementById('previewContent').innerHTML = html;
+            document.getElementById('previewOverlay').classList.add('open');
+        }
+
+        function closePreview() {
+            document.getElementById('previewOverlay').classList.remove('open');
+        }
+
+        // 기본으로 설정 패널 열기
+        document.getElementById('settingsPanel').classList.add('open');
+
+        // CSRF 쿠키 헬퍼
+        function getCookie(name) {
+            let value = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return value ? value.pop() : '';
+        }
+
+        // AI 작문 제안
+        const AISuggest = {
+            debounceTimer: null,
+            abortController: null,
+            activeBlock: null,
+            suggestionEl: null,
+            currentSuggestion: null,
+            DEBOUNCE_MS: 1500,
+            MIN_LENGTH: 20,
+
+            init() {
+                const editorHolder = document.getElementById('editorjs');
+                editorHolder.addEventListener('input', (e) => {
+                    const paragraph = e.target.closest('.ce-paragraph');
+                    if (paragraph) this.onParagraphInput(paragraph);
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Tab' && this.currentSuggestion && this.suggestionEl) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.applySuggestion();
+                    }
+                }, true);
+
+                document.addEventListener('click', (e) => {
+                    if (this.suggestionEl && !this.suggestionEl.contains(e.target)) {
+                        this.dismiss();
+                    }
+                });
+            },
+
+            onParagraphInput(paragraph) {
+                this.dismiss();
+                if (this.abortController) {
+                    this.abortController.abort();
+                    this.abortController = null;
+                }
+                clearTimeout(this.debounceTimer);
+
+                const text = paragraph.innerText.trim();
+                if (text.length < this.MIN_LENGTH) return;
+
+                this.debounceTimer = setTimeout(() => {
+                    this.fetchSuggestion(paragraph);
+                }, this.DEBOUNCE_MS);
+            },
+
+            async fetchSuggestion(paragraph) {
+                this.activeBlock = paragraph;
+                this.abortController = new AbortController();
+                this.showLoading(paragraph);
+
+                try {
+                    const response = await fetch('/write/ai-suggest/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                        body: JSON.stringify({ text: paragraph.innerHTML }),
+                        signal: this.abortController.signal,
+                    });
+                    const data = await response.json();
+
+                    if (data.unchanged || data.error) {
+                        this.dismiss();
+                        return;
+                    }
+                    if (data.suggestion) {
+                        this.showSuggestion(paragraph, data.suggestion);
+                    }
+                } catch (err) {
+                    if (err.name !== 'AbortError') console.error('AI suggest error:', err);
+                    this.dismiss();
+                }
+            },
+
+            showLoading(paragraph) {
+                this.dismiss();
+                const el = document.createElement('div');
+                el.className = 'ai-suggest-tooltip ai-suggest-loading';
+                el.innerHTML = '<span class="ai-suggest-spinner"></span> AI 제안 생성 중...';
+                this.positionTooltip(el, paragraph);
+                this.suggestionEl = el;
+            },
+
+            showSuggestion(paragraph, suggestion) {
+                this.dismiss();
+                this.currentSuggestion = suggestion;
+                const el = document.createElement('div');
+                el.className = 'ai-suggest-tooltip';
+                el.innerHTML = `
+                    <div class="ai-suggest-text">${escapeHtml(suggestion)}</div>
+                    <div class="ai-suggest-hint">
+                        <kbd>Tab</kbd>으로 적용
+                        <span class="ai-suggest-dismiss-btn" onclick="AISuggest.dismiss()">무시</span>
+                    </div>
+                `;
+                this.positionTooltip(el, paragraph);
+                this.suggestionEl = el;
+            },
+
+            positionTooltip(el, paragraph) {
+                const ceBlock = paragraph.closest('.ce-block');
+                if (ceBlock) ceBlock.after(el);
+            },
+
+            applySuggestion() {
+                if (!this.activeBlock || !this.currentSuggestion) return;
+                this.activeBlock.innerText = this.currentSuggestion;
+
+                const range = document.createRange();
+                const sel = window.getSelection();
+                range.selectNodeContents(this.activeBlock);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+
+                this.activeBlock.dispatchEvent(new Event('input', { bubbles: true }));
+                this.dismiss();
+            },
+
+            dismiss() {
+                if (this.suggestionEl) {
+                    this.suggestionEl.remove();
+                    this.suggestionEl = null;
+                }
+                this.currentSuggestion = null;
+            },
+        };
+
+        editor.isReady.then(() => AISuggest.init());
+    </script>
+</body>
+</html>

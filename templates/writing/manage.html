@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}글 관리{% endblock %}
+
+{% block extra_head %}
+<style>
+    .filter-bar select {
+        min-width: 130px;
+    }
+    .tag-badge {
+        font-size: 0.8rem;
+        margin-right: 2px;
+    }
+    .manage-sidebar .list-group-item {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 왼쪽: 글 목록 -->
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">글 관리</h4>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="generateAISummary()" id="aiBtn">
+                    AI 요약 생성
+                </button>
+                <a href="{% url 'write' %}" class="btn btn-dark btn-sm">새 글 작성</a>
+            </div>
+        </div>
+
+        <!-- 필터 바 -->
+        <div class="filter-bar d-flex gap-2 mb-3 flex-wrap">
+            <select class="form-select form-select-sm" onchange="applyFilter('category', this.value)">
+                <option value="">카테고리 전체</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if current_category == cat.id|stringformat:"d" %}selected{% endif %}>
+                    {{ cat.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <select class="form-select form-select-sm" onchange="applyFilter('tag', this.value)">
+                <option value="">태그 전체</option>
+                {% for tag in tags %}
+                <option value="{{ tag.id }}" {% if current_tag == tag.id|stringformat:"d" %}selected{% endif %}>
+                    {{ tag.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <select class="form-select form-select-sm" onchange="applyFilter('status', this.value)">
+                <option value="">상태 전체</option>
+                <option value="published" {% if current_status == 'published' %}selected{% endif %}>공개</option>
+                <option value="draft" {% if current_status == 'draft' %}selected{% endif %}>비공개</option>
+            </select>
+            <select class="form-select form-select-sm" onchange="applyFilter('placement', this.value)">
+                <option value="">배치 전체</option>
+                <option value="main" {% if current_placement == 'main' %}selected{% endif %}>메인 페이지</option>
+                <option value="none" {% if current_placement == 'none' %}selected{% endif %}>배치 안함</option>
+            </select>
+        </div>
+
+        <!-- 글 목록 테이블 -->
+        {% if posts %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 30%;">제목</th>
+                        <th style="width: 12%;">카테고리</th>
+                        <th style="width: 16%;">태그</th>
+                        <th style="width: 10%;">배치</th>
+                        <th style="width: 8%;">상태</th>
+                        <th style="width: 12%;">작성일</th>
+                        <th style="width: 12%;">관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in posts %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'write_edit' post.pk %}" class="text-decoration-none text-dark fw-semibold">
+                                {{ post.title }}
+                            </a>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm"
+                                    onchange="updatePost({{ post.pk }}, 'category', this.value)">
+                                <option value="">-</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if post.category_id == cat.id %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            {% for tag in post.tags.all %}
+                            <span class="badge bg-light text-dark tag-badge">{{ tag.name }}</span>
+                            {% endfor %}
+                            <button class="btn btn-sm p-0 text-muted" data-bs-toggle="modal"
+                                    data-bs-target="#tagModal{{ post.pk }}" title="태그 편집">+</button>
+
+                            <!-- 태그 모달 -->
+                            <div class="modal fade" id="tagModal{{ post.pk }}" tabindex="-1">
+                                <div class="modal-dialog modal-sm">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h6 class="modal-title">태그 선택</h6>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form onsubmit="saveTags(event, {{ post.pk }})">
+                                                {% for tag in tags %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           name="tag_{{ post.pk }}" value="{{ tag.id }}"
+                                                           id="tag_{{ post.pk }}_{{ tag.id }}"
+                                                           {% if tag in post.tags.all %}checked{% endif %}>
+                                                    <label class="form-check-label" for="tag_{{ post.pk }}_{{ tag.id }}">
+                                                        {{ tag.name }}
+                                                    </label>
+                                                </div>
+                                                {% endfor %}
+                                                <button type="submit" class="btn btn-dark btn-sm mt-2 w-100">저장</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm"
+                                    onchange="updatePost({{ post.pk }}, 'placement', this.value)">
+                                <option value="none" {% if post.placement == 'none' %}selected{% endif %}>없음</option>
+                                <option value="main" {% if post.placement == 'main' %}selected{% endif %}>메인</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm {% if post.is_published %}btn-success{% else %}btn-secondary{% endif %}"
+                                    onclick="togglePublish({{ post.pk }}, this)">
+                                {% if post.is_published %}공개{% else %}숨김{% endif %}
+                            </button>
+                        </td>
+                        <td><small>{{ post.created_at|date:"Y-m-d" }}</small></td>
+                        <td>
+                            <a href="{% url 'write_edit' post.pk %}" class="btn btn-sm btn-outline-dark">수정</a>
+                            <form method="post" action="{% url 'delete' post.pk %}" class="d-inline"
+                                  onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <p>작성된 글이 없습니다.</p>
+            <a href="{% url 'write' %}" class="btn btn-dark">첫 글 작성하기</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 오른쪽: 카테고리/태그 관리 -->
+    <div class="col-md-3 manage-sidebar">
+        <!-- 카테고리 관리 -->
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">카테고리 관리</div>
+            <ul class="list-group list-group-flush">
+                {% for cat in categories %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ cat.name }}
+                    <form method="post" action="{% url 'category_manage' %}" class="d-inline"
+                          onsubmit="return confirm('삭제하시겠습니까?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id" value="{{ cat.id }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">x</button>
+                    </form>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">카테고리 없음</li>
+                {% endfor %}
+            </ul>
+            <div class="card-body">
+                <form method="post" action="{% url 'category_manage' %}" class="d-flex gap-1">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    <input type="text" name="name" class="form-control form-control-sm" placeholder="새 카테고리" required>
+                    <button type="submit" class="btn btn-dark btn-sm">추가</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 태그 관리 -->
+        <div class="card">
+            <div class="card-header fw-semibold">태그 관리</div>
+            <div class="card-body">
+                <div class="mb-2">
+                    {% for tag in tags %}
+                    <span class="badge bg-light text-dark border mb-1">
+                        {{ tag.name }}
+                        <form method="post" action="{% url 'tag_manage' %}" class="d-inline"
+                              onsubmit="return confirm('삭제하시겠습니까?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="{{ tag.id }}">
+                            <button type="submit" class="btn btn-sm p-0 ms-1 text-danger border-0 bg-transparent">x</button>
+                        </form>
+                    </span>
+                    {% empty %}
+                    <span class="text-muted">태그 없음</span>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'tag_manage' %}" class="d-flex gap-1">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    <input type="text" name="name" class="form-control form-control-sm" placeholder="새 태그" required>
+                    <button type="submit" class="btn btn-dark btn-sm">추가</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getCookie(name) {
+        let value = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return value ? value.pop() : '';
+    }
+
+    function applyFilter(key, value) {
+        const url = new URL(window.location);
+        if (value) {
+            url.searchParams.set(key, value);
+        } else {
+            url.searchParams.delete(key);
+        }
+        window.location = url;
+    }
+
+    function updatePost(pk, field, value) {
+        const formData = new FormData();
+        formData.append('field', field);
+        formData.append('value', value);
+        fetch(`/manage/post/${pk}/update/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            body: formData,
+        });
+    }
+
+    function togglePublish(pk, btn) {
+        const formData = new FormData();
+        formData.append('field', 'is_published');
+        fetch(`/manage/post/${pk}/update/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            body: formData,
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.value) {
+                btn.className = 'btn btn-sm btn-success';
+                btn.textContent = '공개';
+            } else {
+                btn.className = 'btn btn-sm btn-secondary';
+                btn.textContent = '숨김';
+            }
+        });
+    }
+
+    function generateAISummary() {
+        const btn = document.getElementById('aiBtn');
+        btn.disabled = true;
+        btn.textContent = 'AI 분석 중...';
+
+        fetch('{% url "generate_ai_summary" %}', {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                btn.textContent = 'AI 요약 완료!';
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-success');
+                setTimeout(() => {
+                    btn.textContent = 'AI 요약 생성';
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-secondary');
+                    btn.disabled = false;
+                }, 3000);
+            } else {
+                alert('오류: ' + (data.error || '알 수 없는 오류'));
+                btn.textContent = 'AI 요약 생성';
+                btn.disabled = false;
+            }
+        })
+        .catch(() => {
+            alert('요청 실패. 네트워크를 확인하세요.');
+            btn.textContent = 'AI 요약 생성';
+            btn.disabled = false;
+        });
+    }
+
+    function saveTags(e, pk) {
+        e.preventDefault();
+        const checkboxes = document.querySelectorAll(`input[name="tag_${pk}"]:checked`);
+        const formData = new FormData();
+        formData.append('field', 'tags');
+        checkboxes.forEach(cb => formData.append('value', cb.value));
+
+        fetch(`/manage/post/${pk}/update/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            body: formData,
+        })
+        .then(() => location.reload());
+    }
+</script>
+{% endblock %}

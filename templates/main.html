@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load editorjs_tags %}
+
+{% block title %}Main{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* 메인 카드 공통 */
+    .main-card {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    .main-card:hover .main-card-title {
+        text-decoration: underline;
+    }
+
+    /* 첫 번째 카드: 히어로 */
+    .hero-card {
+        display: flex;
+        gap: 28px;
+        padding-bottom: 28px;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 24px;
+    }
+    .hero-card-body {
+        flex: 1;
+        min-width: 0;
+    }
+    .hero-card-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.35;
+        color: #1a1a1a;
+        margin-bottom: 12px;
+    }
+    .hero-card-summary {
+        font-size: 0.95rem;
+        color: #555;
+        line-height: 1.7;
+        margin-bottom: 12px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .hero-card-meta {
+        font-size: 0.8rem;
+        color: #999;
+    }
+    .hero-card-thumb {
+        flex-shrink: 0;
+        width: 320px;
+        height: 220px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #f0f0f0;
+    }
+    .hero-card-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* 하위 카드 */
+    .sub-card {
+        padding: 20px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .sub-card-category {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #333;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-bottom: 6px;
+    }
+    .sub-card-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        line-height: 1.4;
+        margin-bottom: 6px;
+    }
+    .sub-card-meta {
+        font-size: 0.8rem;
+        color: #999;
+    }
+
+    /* AI 추천 가이드 */
+    .ai-guide {
+        background: #fafafa;
+        border: 1px solid #e8e8e8;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .ai-guide-header {
+        padding: 14px 18px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        border-bottom: 1px solid #e8e8e8;
+        background: #fff;
+    }
+    .ai-guide-icon {
+        margin-right: 4px;
+    }
+    .ai-guide-body {
+        padding: 18px;
+        font-size: 0.88rem;
+        line-height: 1.75;
+        color: #444;
+    }
+    .ai-guide-body h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin: 14px 0 8px;
+        color: #1a1a1a;
+    }
+    .ai-guide-body h3:first-child {
+        margin-top: 0;
+    }
+    .ai-guide-body p {
+        margin-bottom: 10px;
+    }
+    .ai-guide-body ul {
+        padding-left: 18px;
+        margin-bottom: 10px;
+    }
+    .ai-guide-body li {
+        margin-bottom: 4px;
+    }
+    .ai-guide-footer {
+        padding: 10px 18px;
+        font-size: 0.75rem;
+        color: #aaa;
+        border-top: 1px solid #e8e8e8;
+        text-align: right;
+    }
+
+    @media (max-width: 768px) {
+        .hero-card {
+            flex-direction: column-reverse;
+            gap: 16px;
+        }
+        .hero-card-thumb {
+            width: 100%;
+            height: 200px;
+        }
+        .hero-card-title {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        {% if main_posts %}
+            {% for post in main_posts %}
+                {% if forloop.first %}
+                <!-- 히어로 카드 -->
+                <a href="{% url 'essay_detail' post.pk %}" class="main-card hero-card">
+                    <div class="hero-card-body">
+                        <div class="hero-card-title main-card-title">{{ post.title }}</div>
+                        <div class="hero-card-summary">{{ post.content|editorjs_plaintext|truncatechars:150 }}</div>
+                        <div class="hero-card-meta">
+                            {% if post.category %}{{ post.category.name }} · {% endif %}{{ post.created_at|date:"Y.m.d" }}
+                        </div>
+                    </div>
+                    {% if post.thumbnail %}
+                    <div class="hero-card-thumb">
+                        <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}">
+                    </div>
+                    {% endif %}
+                </a>
+                {% else %}
+                <!-- 하위 카드 -->
+                <a href="{% url 'essay_detail' post.pk %}" class="main-card sub-card">
+                    {% if post.category %}
+                    <div class="sub-card-category">{{ post.category.name }}</div>
+                    {% endif %}
+                    <div class="sub-card-title main-card-title">{{ post.title }}</div>
+                    <div class="sub-card-meta">{{ post.created_at|date:"Y.m.d" }}</div>
+                </a>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <p style="color:#aaa; text-align:center; padding:40px 0;">등록된 글이 없습니다.</p>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+        {% if ai_summary %}
+        <div class="ai-guide">
+            <div class="ai-guide-header">
+                <span class="ai-guide-icon">&#10024;</span> AI 추천 가이드
+            </div>
+            <div class="ai-guide-body">
+                {{ ai_summary.content|safe }}
+            </div>
+            <div class="ai-guide-footer">
+                {{ ai_summary.updated_at|date:"Y.m.d H:i" }} 업데이트
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

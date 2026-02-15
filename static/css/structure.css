@@ -1,0 +1,55 @@
+@font-face {
+    font-family: 'Inter';
+    src: url('/static/font/Inter-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/static/font/Inter-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Noto Sans KR';
+    src: url('/static/font/NotoSansKR-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Noto Sans KR';
+    src: url('/static/font/NotoSansKR-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+body {
+    font-family: 'Inter', 'Noto Sans KR', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* 로고 컨테이너 */
+
+
+.logo-img {
+    max-height: 260px;
+}
+
+/* 나브바 */
+.navbar .navbar-collapse {
+    justify-content: center;
+}
+
+.navbar {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.navbar .nav-link {
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+}
