@@ -16,6 +16,9 @@ api.txt
 # Database
 db.sqlite3
 
+# Static collected
+staticfiles/
+
 # Media uploads
 media/
 
