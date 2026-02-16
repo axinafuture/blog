@@ -43,11 +43,11 @@ def editorjs_render(value):
 
         elif block_type == 'checklist':
             items = block_data.get('items', [])
-            checklist_html = '<div class="checklist">'
+            checklist_html = '<div class="article-checklist">'
             for item in items:
                 checked = 'checked' if item.get('checked') else ''
                 text = item.get('text', '')
-                checklist_html += f'<div class="checklist-item"><input type="checkbox" disabled {checked}> {text}</div>'
+                checklist_html += f'<div class="article-checklist-item"><input type="checkbox" disabled {checked}> {text}</div>'
             checklist_html += '</div>'
             html_parts.append(checklist_html)
 
@@ -104,7 +104,7 @@ def editorjs_render(value):
             embed_url = block_data.get('embed', '')
             caption = block_data.get('caption', '')
             html_parts.append(
-                f'<div class="embed"><iframe src="{escape(embed_url)}" frameborder="0" allowfullscreen></iframe>'
+                f'<div class="article-embed"><iframe src="{escape(embed_url)}" frameborder="0" allowfullscreen></iframe>'
                 f'{"<p>" + caption + "</p>" if caption else ""}</div>'
             )
 

@@ -1,0 +1,87 @@
+/* ===== 글 관리 페이지 전용 스타일 ===== */
+
+/* --- 필터 바 --- */
+.manage-filter-bar select {
+    flex: 1;
+    min-width: 0;
+}
+
+/* --- 사이드바 --- */
+.manage-sidebar .list-group-item {
+    font-size: 0.9rem;
+}
+
+/* --- AI 요약 카드 --- */
+.manage-post-stats {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+#promptEditor {
+    display: none;
+}
+
+#promptEditor.open {
+    display: block;
+}
+
+.manage-section-divider {
+    border-top: 1px solid #eee;
+    padding-top: 12px;
+}
+
+.manage-prompt-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.manage-prompt-textarea {
+    font-size: 0.85rem;
+}
+
+.manage-ai-body {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: #333;
+    border-top: 1px solid #eee;
+    padding-top: 12px;
+}
+
+.manage-ai-date {
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-top: 8px;
+}
+
+.manage-ai-loading {
+    text-align: center;
+    padding: 16px 0;
+    color: #888;
+    font-size: 0.85rem;
+    border-top: 1px solid #eee;
+}
+
+.manage-ai-error {
+    font-size: 0.85rem;
+    color: #d32f2f;
+    text-align: center;
+    padding: 12px 0;
+    border-top: 1px solid #eee;
+}
+
+/* --- 글 목록 테이블 --- */
+.manage-col-title    { width: 30%; }
+.manage-col-category { width: 12%; }
+.manage-col-tags     { width: 16%; }
+.manage-col-placement{ width: 10%; }
+.manage-col-status   { width: 8%; }
+.manage-col-date     { width: 12%; }
+.manage-col-actions  { width: 12%; }
+
+.manage-tag-badge {
+    font-size: 0.8rem;
+    margin-right: 2px;
+}

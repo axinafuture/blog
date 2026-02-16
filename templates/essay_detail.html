@@ -5,251 +5,7 @@
 {% block title %}{{ post.title }}{% endblock %}
 
 {% block extra_head %}
-<style>
-    /* 카테고리 사이드바 */
-    .category-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .category-list li a {
-        display: block;
-        padding: 9px 14px;
-        color: #555;
-        text-decoration: none;
-        font-size: 0.92rem;
-        border-radius: 6px;
-        transition: all 0.15s;
-    }
-    .category-list li a:hover {
-        background: #f0f0f0;
-        color: #111;
-    }
-    .category-list li a.active {
-        background: #333;
-        color: #fff;
-        font-weight: 600;
-    }
-    .category-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 14px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #333;
-    }
-
-    /* 검색 */
-    .search-input-wrap {
-        display: flex;
-        align-items: center;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 8px 12px;
-        background: #fff;
-        transition: border-color 0.2s;
-    }
-    .search-input-wrap:focus-within {
-        border-color: #333;
-    }
-    .search-icon {
-        font-size: 20px;
-        color: #999;
-        margin-right: 8px;
-    }
-    .search-input {
-        border: none;
-        outline: none;
-        font-size: 0.9rem;
-        width: 100%;
-        background: transparent;
-    }
-
-    /* 글 상세 */
-    .article-header {
-        margin-bottom: 32px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #eee;
-    }
-    .article-title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #1a1a1a;
-        line-height: 1.35;
-        margin-bottom: 12px;
-    }
-    .article-meta {
-        font-size: 0.85rem;
-        color: #999;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .article-category {
-        color: #555;
-        font-weight: 600;
-    }
-    .article-body {
-        font-size: 1.05rem;
-        line-height: 1.85;
-        color: #333;
-    }
-    .article-body p {
-        margin-bottom: 1.2em;
-    }
-    .article-body h2 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin: 2em 0 0.8em;
-    }
-    .article-body h3 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin: 1.6em 0 0.6em;
-    }
-    .article-body h4 {
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin: 1.4em 0 0.5em;
-    }
-    .article-body ul, .article-body ol {
-        padding-left: 1.5em;
-        margin-bottom: 1.2em;
-    }
-    .article-body li {
-        margin-bottom: 0.4em;
-    }
-    .article-body blockquote {
-        border-left: 4px solid #333;
-        padding: 12px 20px;
-        margin: 1.5em 0;
-        background: #f9f9f9;
-        border-radius: 0 6px 6px 0;
-    }
-    .article-body blockquote cite {
-        display: block;
-        font-size: 0.85rem;
-        color: #888;
-        margin-top: 8px;
-    }
-    .article-body pre {
-        background: #f4f4f4;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        padding: 16px 20px;
-        overflow-x: auto;
-        margin: 1.5em 0;
-    }
-    .article-body code {
-        font-family: 'Courier New', monospace;
-        font-size: 0.9rem;
-    }
-    .article-body hr {
-        border: none;
-        height: 3px;
-        width: 60px;
-        background: #ddd;
-        margin: 40px auto;
-    }
-    .article-image {
-        margin: 1.5em 0;
-        text-align: center;
-    }
-    .article-image img {
-        max-width: 100%;
-        border-radius: 6px;
-    }
-    .article-image.bordered img {
-        border: 1px solid #ddd;
-    }
-    .article-image.with-bg {
-        background: #f4f4f4;
-        padding: 16px;
-        border-radius: 8px;
-    }
-    .article-image.stretched img {
-        width: 100%;
-    }
-    .article-image figcaption {
-        font-size: 0.85rem;
-        color: #888;
-        margin-top: 8px;
-    }
-    .article-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1.5em 0;
-    }
-    .article-table th, .article-table td {
-        border: 1px solid #ddd;
-        padding: 10px 14px;
-        text-align: left;
-    }
-    .article-table th {
-        background: #f4f4f4;
-        font-weight: 600;
-    }
-    .checklist {
-        margin: 1.2em 0;
-    }
-    .checklist-item {
-        padding: 4px 0;
-    }
-    .checklist-item input {
-        margin-right: 8px;
-    }
-    .embed {
-        margin: 1.5em 0;
-        text-align: center;
-    }
-    .embed iframe {
-        width: 100%;
-        max-width: 640px;
-        height: 360px;
-        border-radius: 6px;
-    }
-
-    /* 목록 돌아가기 */
-    .back-to-list {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 0.88rem;
-        color: #888;
-        text-decoration: none;
-        margin-bottom: 24px;
-        transition: color 0.15s;
-    }
-    .back-to-list:hover {
-        color: #333;
-    }
-    .back-to-list .material-icons-outlined {
-        font-size: 18px;
-    }
-
-    /* 태그 */
-    .article-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 32px;
-        padding-top: 20px;
-        border-top: 1px solid #eee;
-    }
-    .article-tag {
-        padding: 4px 12px;
-        background: #f0f0f0;
-        border-radius: 14px;
-        font-size: 0.8rem;
-        color: #666;
-    }
-
-    @media (max-width: 768px) {
-        .article-title {
-            font-size: 1.4rem;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/essay.css' %}">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
 {% endblock %}
 
@@ -260,16 +16,16 @@
         <!-- 검색 -->
         <div class="search-box mb-4">
             <form method="get" action="{% url 'essay' %}">
-                <div class="search-input-wrap">
-                    <span class="material-icons-outlined search-icon">search</span>
-                    <input type="text" name="q" placeholder="검색어를 입력하세요" class="search-input">
+                <div class="essay-search-wrap">
+                    <span class="material-icons-outlined essay-search-icon">search</span>
+                    <input type="text" name="q" placeholder="검색어를 입력하세요" class="essay-search-input">
                 </div>
             </form>
         </div>
 
         <!-- 카테고리 -->
-        <div class="category-title">카테고리</div>
-        <ul class="category-list">
+        <div class="essay-category-title">카테고리</div>
+        <ul class="essay-category-list">
             <li><a href="{% url 'essay' %}">전체</a></li>
             {% for cat in categories %}
             <li><a href="{% url 'essay' %}?category={{ cat.id }}" class="{% if post.category_id == cat.id %}active{% endif %}">{{ cat.name }}</a></li>
@@ -296,7 +52,7 @@
             </div>
 
             {% if post.thumbnail %}
-            <div class="article-image" style="margin-bottom:32px;">
+            <div class="article-image article-thumbnail">
                 <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}">
             </div>
             {% endif %}

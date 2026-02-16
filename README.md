@@ -17,7 +17,7 @@ Django 기반 개인 블로그 프로젝트. Editor.js 블록 에디터와 OpenA
 ## 기술 스택
 
 - Python 3 / Django 5.2
-- Editor.js 2.28 (CDN)
+- Editor.js 2.28 (로컬)
 - Bootstrap 5.3 (로컬)
 - OpenAI API (gpt-4o, gpt-4o-mini)
 - SQLite
@@ -72,6 +72,13 @@ blog/
 ```
 
 ## 변경 이력
+
+### 2026-02-16
+- 인라인 스타일을 페이지별 CSS 파일로 분리 (main.css, essay.css, manage.css)
+- 클래스명 체계화 — essay-/article-/manage- 접두사로 충돌 방지
+- Editor.js CDN을 로컬 static/js/로 전환 (오프라인 동작)
+- 푸터 추가 (base.html)
+- 관리 페이지 필터 드롭다운 한 줄 배치
 
 ### 2025-02-16
 - AI 프롬프트 편집 기능 추가 (관리 페이지에서 시스템 메시지/프롬프트 수정 가능)

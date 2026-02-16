@@ -1,0 +1,395 @@
+/* ===== 에세이 페이지 공통 스타일 (목록 + 상세) ===== */
+
+/* --- 카테고리 사이드바 --- */
+.essay-category-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #333;
+}
+
+.essay-category-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.essay-category-list li a {
+    display: block;
+    padding: 9px 14px;
+    color: #555;
+    text-decoration: none;
+    font-size: 0.92rem;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+
+.essay-category-list li a:hover {
+    background: #f0f0f0;
+    color: #111;
+}
+
+.essay-category-list li a.active {
+    background: #333;
+    color: #fff;
+    font-weight: 600;
+}
+
+/* --- 검색 --- */
+.essay-search-wrap {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: #fff;
+    transition: border-color 0.2s;
+}
+
+.essay-search-wrap:focus-within {
+    border-color: #333;
+}
+
+.essay-search-icon {
+    font-size: 20px;
+    color: #999;
+    margin-right: 8px;
+}
+
+.essay-search-input {
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    width: 100%;
+    background: transparent;
+}
+
+/* --- 글 목록 페이지 타이틀 --- */
+.essay-page-title {
+    font-weight: 700;
+}
+
+/* --- 글 카드 --- */
+.essay-post-card {
+    display: flex;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s;
+}
+
+.essay-post-card:hover {
+    background: #fafafa;
+}
+
+.essay-post-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.essay-post-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.essay-post-card-date {
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.essay-post-card-summary {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.essay-post-card-thumb {
+    flex-shrink: 0;
+    width: 140px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.essay-post-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* --- 페이지네이션 --- */
+.essay-pagination .page-link {
+    color: #333;
+    border-color: #ddd;
+    font-size: 0.9rem;
+}
+
+.essay-pagination .page-item.active .page-link {
+    background: #333;
+    border-color: #333;
+    color: #fff;
+}
+
+/* --- 빈 상태 --- */
+.essay-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #aaa;
+}
+
+.essay-empty-state .material-icons-outlined {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+/* --- 글 상세: 헤더 --- */
+.article-header {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.article-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.35;
+    margin-bottom: 12px;
+}
+
+.article-meta {
+    font-size: 0.85rem;
+    color: #999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.article-category {
+    color: #555;
+    font-weight: 600;
+}
+
+/* --- 글 상세: 썸네일 --- */
+.article-thumbnail {
+    margin-bottom: 32px;
+}
+
+/* --- 글 상세: 본문 --- */
+.article-body {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: #333;
+}
+
+.article-body p {
+    margin-bottom: 1.2em;
+}
+
+.article-body h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 2em 0 0.8em;
+}
+
+.article-body h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+}
+
+.article-body h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 1.4em 0 0.5em;
+}
+
+.article-body ul,
+.article-body ol {
+    padding-left: 1.5em;
+    margin-bottom: 1.2em;
+}
+
+.article-body li {
+    margin-bottom: 0.4em;
+}
+
+.article-body blockquote {
+    border-left: 4px solid #333;
+    padding: 12px 20px;
+    margin: 1.5em 0;
+    background: #f9f9f9;
+    border-radius: 0 6px 6px 0;
+}
+
+.article-body blockquote cite {
+    display: block;
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 8px;
+}
+
+.article-body pre {
+    background: #f4f4f4;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 1.5em 0;
+}
+
+.article-body code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.article-body hr {
+    border: none;
+    height: 3px;
+    width: 60px;
+    background: #ddd;
+    margin: 40px auto;
+}
+
+/* --- 글 상세: 이미지 --- */
+.article-image {
+    margin: 1.5em 0;
+    text-align: center;
+}
+
+.article-image img {
+    max-width: 100%;
+    border-radius: 6px;
+}
+
+.article-image.bordered img {
+    border: 1px solid #ddd;
+}
+
+.article-image.with-bg {
+    background: #f4f4f4;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.article-image.stretched img {
+    width: 100%;
+}
+
+.article-image figcaption {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 8px;
+}
+
+/* --- 글 상세: 테이블 --- */
+.article-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5em 0;
+}
+
+.article-table th,
+.article-table td {
+    border: 1px solid #ddd;
+    padding: 10px 14px;
+    text-align: left;
+}
+
+.article-table th {
+    background: #f4f4f4;
+    font-weight: 600;
+}
+
+/* --- 글 상세: 체크리스트 --- */
+.article-checklist {
+    margin: 1.2em 0;
+}
+
+.article-checklist-item {
+    padding: 4px 0;
+}
+
+.article-checklist-item input {
+    margin-right: 8px;
+}
+
+/* --- 글 상세: 임베드 --- */
+.article-embed {
+    margin: 1.5em 0;
+    text-align: center;
+}
+
+.article-embed iframe {
+    width: 100%;
+    max-width: 640px;
+    height: 360px;
+    border-radius: 6px;
+}
+
+/* --- 글 상세: 목록 돌아가기 --- */
+.back-to-list {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.88rem;
+    color: #888;
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.15s;
+}
+
+.back-to-list:hover {
+    color: #333;
+}
+
+.back-to-list .material-icons-outlined {
+    font-size: 18px;
+}
+
+/* --- 글 상세: 태그 --- */
+.article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.article-tag {
+    padding: 4px 12px;
+    background: #f0f0f0;
+    border-radius: 14px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* --- 반응형 --- */
+@media (max-width: 768px) {
+    .article-title {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .essay-post-card-thumb {
+        width: 100px;
+        height: 72px;
+    }
+}
