@@ -49,8 +49,24 @@ class Post(models.Model):
         return self.title
 
 
+DEFAULT_AI_SYSTEM = '당신은 블로그의 글을 읽고, 작가의 최근 생각을 조용히 정리해주는 편집자입니다.'
+
+DEFAULT_AI_PROMPT = """위 글들을 바탕으로, 이 블로그 작가가 최근 어떤 생각을 하고 있는지 정리하는 짧은 글을 작성해주세요.
+
+- 글을 추천하거나 가이드하지 말 것
+- 카테고리 설명이나 목록 나열 금지
+- 글쓴이의 최근 관심사, 고민, 시선의 흐름을 하나의 맥락으로 묶어 서술
+- 담백하고 사적인 에세이 톤
+- 분석적이지 않고, 정리된 사유처럼 작성
+- 존대말의 종결형식을 사용
+- HTML 형식 (h3, p 태그만 사용)
+- 전체 길이 300자 내외"""
+
+
 class AISummary(models.Model):
-    content = models.TextField(verbose_name='AI 요약')
+    content = models.TextField(verbose_name='AI 요약', blank=True, default='')
+    system_message = models.TextField(verbose_name='시스템 메시지', default=DEFAULT_AI_SYSTEM)
+    prompt_template = models.TextField(verbose_name='프롬프트', default=DEFAULT_AI_PROMPT)
     updated_at = models.DateTimeField(auto_now=True, verbose_name='생성일')
 
     class Meta:

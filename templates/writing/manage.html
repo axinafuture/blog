@@ -23,11 +23,54 @@
     <div class="col-md-9">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0">글 관리</h4>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="generateAISummary()" id="aiBtn">
-                    AI 요약 생성
-                </button>
-                <a href="{% url 'write' %}" class="btn btn-dark btn-sm">새 글 작성</a>
+            <a href="{% url 'write' %}" class="btn btn-dark btn-sm">새 글 작성</a>
+        </div>
+
+        <!-- AI 요약 -->
+        <div class="card mb-3">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div style="font-size:0.85rem; color:#666;">
+                    <div class="d-flex gap-3">
+                        <span>전체 <strong>{{ total_count }}</strong></span>
+                        <span>공개 <strong class="text-success">{{ published_count }}</strong></span>
+                        <span>비공개 <strong class="text-secondary">{{ draft_count }}</strong></span>
+                    </div>
+                </div>
+                <div class="ms-auto d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="togglePromptEditor()">
+                        프롬프트
+                    </button>
+                    <button type="button" class="btn btn-outline-dark btn-sm" onclick="generateAISummary()" id="aiBtn">
+                        AI 요약 생성
+                    </button>
+                </div>
+            </div>
+
+            <!-- 프롬프트 편집 영역 -->
+            <div id="promptEditor" style="display:none;">
+                <div class="card-body pt-0">
+                    <div style="border-top:1px solid #eee; padding-top:12px;">
+                        <label style="font-size:0.8rem; font-weight:600; color:#555; margin-bottom:4px; display:block;">시스템 메시지</label>
+                        <textarea id="systemMessage" class="form-control form-control-sm mb-3"
+                                  rows="2" style="font-size:0.85rem;">{{ ai_system }}</textarea>
+                        <label style="font-size:0.8rem; font-weight:600; color:#555; margin-bottom:4px; display:block;">프롬프트 (글 목록 아래에 붙는 지시문)</label>
+                        <textarea id="promptTemplate" class="form-control form-control-sm"
+                                  rows="8" style="font-size:0.85rem;">{{ ai_prompt }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div id="aiSummaryContent">
+                {% if ai_summary %}
+                <div class="card-body pt-0">
+                    <div style="font-size:0.88rem; line-height:1.7; color:#333; border-top:1px solid #eee; padding-top:12px;">
+                        {{ ai_summary.content|safe }}
+                    </div>
+                    <div style="font-size:0.75rem; color:#aaa; margin-top:8px;">
+                        {{ ai_summary.updated_at|date:"Y.m.d H:i" }} 생성
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -165,7 +208,7 @@
         {% endif %}
     </div>
 
-    <!-- 오른쪽: 카테고리/태그 관리 -->
+    <!-- 오른쪽: 사이드바 -->
     <div class="col-md-3 manage-sidebar">
         <!-- 카테고리 관리 -->
         <div class="card mb-3">
@@ -254,6 +297,11 @@
         });
     }
 
+    function togglePromptEditor() {
+        const el = document.getElementById('promptEditor');
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
     function togglePublish(pk, btn) {
         const formData = new FormData();
         formData.append('field', 'is_published');
@@ -276,34 +324,49 @@
 
     function generateAISummary() {
         const btn = document.getElementById('aiBtn');
+        const contentEl = document.getElementById('aiSummaryContent');
         btn.disabled = true;
-        btn.textContent = 'AI 분석 중...';
+        btn.textContent = '분석 중...';
+        contentEl.innerHTML = '<div class="card-body pt-0"><div style="text-align:center;padding:16px 0;color:#888;font-size:0.85rem;border-top:1px solid #eee;"><div class="spinner-border spinner-border-sm mb-2" role="status"></div><br>AI가 글을 분석하고 있습니다...</div></div>';
+
+        const systemMsg = document.getElementById('systemMessage').value;
+        const promptTpl = document.getElementById('promptTemplate').value;
 
         fetch('{% url "generate_ai_summary" %}', {
             method: 'POST',
-            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                system_message: systemMsg,
+                prompt_template: promptTpl,
+            }),
         })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                btn.textContent = 'AI 요약 완료!';
-                btn.classList.remove('btn-outline-secondary');
-                btn.classList.add('btn-success');
-                setTimeout(() => {
-                    btn.textContent = 'AI 요약 생성';
-                    btn.classList.remove('btn-success');
-                    btn.classList.add('btn-outline-secondary');
-                    btn.disabled = false;
-                }, 3000);
+                contentEl.innerHTML = `
+                    <div class="card-body pt-0">
+                        <div style="font-size:0.88rem;line-height:1.7;color:#333;border-top:1px solid #eee;padding-top:12px;">
+                            ${data.content}
+                        </div>
+                        <div style="font-size:0.75rem;color:#aaa;margin-top:8px;">
+                            ${data.updated_at} 생성
+                        </div>
+                    </div>
+                `;
+                btn.textContent = '생성';
+                btn.disabled = false;
             } else {
-                alert('오류: ' + (data.error || '알 수 없는 오류'));
-                btn.textContent = 'AI 요약 생성';
+                contentEl.innerHTML = '<div class="card-body pt-0"><div style="font-size:0.85rem;color:#d32f2f;text-align:center;padding:12px 0;border-top:1px solid #eee;">오류: ' + (data.error || '알 수 없는 오류') + '</div></div>';
+                btn.textContent = '생성';
                 btn.disabled = false;
             }
         })
         .catch(() => {
-            alert('요청 실패. 네트워크를 확인하세요.');
-            btn.textContent = 'AI 요약 생성';
+            contentEl.innerHTML = '<div class="card-body pt-0"><div style="font-size:0.85rem;color:#d32f2f;text-align:center;padding:12px 0;border-top:1px solid #eee;">요청 실패. 네트워크를 확인하세요.</div></div>';
+            btn.textContent = '생성';
             btn.disabled = false;
         });
     }

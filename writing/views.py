@@ -83,6 +83,10 @@ def manage(request):
     if placement:
         posts = posts.filter(placement=placement)
 
+    from .models import DEFAULT_AI_SYSTEM, DEFAULT_AI_PROMPT
+    all_posts = Post.objects.all()
+    ai_summary = AISummary.objects.filter(id=1).first()
+
     context = {
         'posts': posts.distinct(),
         'categories': categories,
@@ -91,6 +95,12 @@ def manage(request):
         'current_tag': tag_id,
         'current_status': status,
         'current_placement': placement,
+        'total_count': all_posts.count(),
+        'published_count': all_posts.filter(is_published=True).count(),
+        'draft_count': all_posts.filter(is_published=False).count(),
+        'ai_summary': ai_summary,
+        'ai_system': ai_summary.system_message if ai_summary else DEFAULT_AI_SYSTEM,
+        'ai_prompt': ai_summary.prompt_template if ai_summary else DEFAULT_AI_PROMPT,
     }
     return render(request, 'writing/manage.html', context)
 
@@ -218,6 +228,19 @@ def generate_ai_summary(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST only'}, status=405)
 
+    # 요청에서 프롬프트 받기
+    try:
+        body = json.loads(request.body)
+        user_system = body.get('system_message', '').strip()
+        user_prompt = body.get('prompt_template', '').strip()
+    except (json.JSONDecodeError, AttributeError):
+        user_system = ''
+        user_prompt = ''
+
+    from .models import DEFAULT_AI_SYSTEM, DEFAULT_AI_PROMPT
+    system_message = user_system or DEFAULT_AI_SYSTEM
+    prompt_template = user_prompt or DEFAULT_AI_PROMPT
+
     posts = Post.objects.filter(is_published=True).select_related('category')
     if not posts.exists():
         return JsonResponse({'error': '공개된 글이 없습니다.'}, status=400)
@@ -234,16 +257,7 @@ def generate_ai_summary(request):
 
 {posts_text}
 
-위 글들을 바탕으로, 이 블로그 작가가 최근 어떤 생각을 하고 있는지 정리하는 짧은 글을 작성해주세요.
-
-- 글을 추천하거나 가이드하지 말 것
-- 카테고리 설명이나 목록 나열 금지
-- 글쓴이의 최근 관심사, 고민, 시선의 흐름을 하나의 맥락으로 묶어 서술
-- 담백하고 사적인 에세이 톤
-- 분석적이지 않고, 정리된 사유처럼 작성
-- 존대말의 종결형식을 사용
-- HTML 형식 (h3, p 태그만 사용)
-- 전체 길이 300자 내외"""
+{prompt_template}"""
 
     try:
         from openai import OpenAI
@@ -251,7 +265,7 @@ def generate_ai_summary(request):
         response = client.chat.completions.create(
             model='gpt-4o',
             messages=[
-                {'role': 'system', 'content': '당신은 블로그의 글을 읽고, 작가의 최근 생각을 조용히 정리해주는 편집자입니다.'},
+                {'role': 'system', 'content': system_message},
                 {'role': 'user', 'content': prompt},
             ],
             max_tokens=1000,
@@ -261,7 +275,11 @@ def generate_ai_summary(request):
 
         summary, _ = AISummary.objects.update_or_create(
             id=1,
-            defaults={'content': ai_content},
+            defaults={
+                'content': ai_content,
+                'system_message': system_message,
+                'prompt_template': prompt_template,
+            },
         )
 
         return JsonResponse({
