@@ -1,1 +1,1 @@
-web: python manage.py migrate && python manage.py collectstatic --noinput && python manage.py ensure_superuser && gunicorn config.wsgi --timeout 120
+web: bash start.sh
