@@ -5,7 +5,6 @@ Django settings for config project.
 from pathlib import Path
 from dotenv import load_dotenv
 import os
-import dj_database_url
 
 load_dotenv()
 
@@ -34,7 +33,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -64,13 +62,29 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
-# DATABASE_URL 환경변수가 있으면 PostgreSQL, 없으면 SQLite
+# PythonAnywhere: MySQL 사용, 로컬: SQLite
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'
-    )
-}
+if os.environ.get('MYSQL_NAME'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ['MYSQL_NAME'],
+            'USER': os.environ['MYSQL_USER'],
+            'PASSWORD': os.environ['MYSQL_PASSWORD'],
+            'HOST': os.environ.get('MYSQL_HOST', 'localhost'),
+            'PORT': os.environ.get('MYSQL_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -96,11 +110,6 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STORAGES = {
-    'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
-    },
-}
 
 # Media files
 MEDIA_URL = '/media/'
