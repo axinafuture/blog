@@ -62,11 +62,27 @@ DEFAULT_AI_PROMPT = """위 글들을 바탕으로, 이 블로그 작가가 최�
 - HTML 형식 (h3, p 태그만 사용)
 - 전체 길이 300자 내외"""
 
+DEFAULT_SUGGEST_SYSTEM = '당신은 글을 다듬어주는 편집자입니다. 교정된 문장만 반환합니다.'
+
+DEFAULT_SUGGEST_PROMPT = """다음 문장을 더 자연스럽고 명확하게 다듬어주세요.
+
+원문:
+{text}
+
+규칙:
+- 원문의 의미와 톤을 유지할 것
+- 문법, 맞춤법, 어색한 표현만 교정
+- 이미 충분히 좋은 문장이면 원문을 그대로 반환
+- 교정된 문장만 반환 (설명 없이)
+- HTML 태그 없이 순수 텍스트만 반환"""
+
 
 class AISummary(models.Model):
     content = models.TextField(verbose_name='AI 요약', blank=True, default='')
     system_message = models.TextField(verbose_name='시스템 메시지', default=DEFAULT_AI_SYSTEM)
     prompt_template = models.TextField(verbose_name='프롬프트', default=DEFAULT_AI_PROMPT)
+    suggest_system = models.TextField(verbose_name='제안 시스템 메시지', default=DEFAULT_SUGGEST_SYSTEM)
+    suggest_prompt = models.TextField(verbose_name='제안 프롬프트', default=DEFAULT_SUGGEST_PROMPT)
     updated_at = models.DateTimeField(auto_now=True, verbose_name='생성일')
 
     class Meta:

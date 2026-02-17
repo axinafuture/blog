@@ -40,12 +40,25 @@
             <div id="promptEditor">
                 <div class="card-body pt-0">
                     <div class="manage-section-divider">
+                        <label class="manage-prompt-label fw-semibold mb-2">AI 요약 프롬프트</label>
                         <label class="manage-prompt-label">시스템 메시지</label>
                         <textarea id="systemMessage" class="form-control form-control-sm mb-3 manage-prompt-textarea"
                                   rows="2">{{ ai_system }}</textarea>
                         <label class="manage-prompt-label">프롬프트 (글 목록 아래에 붙는 지시문)</label>
                         <textarea id="promptTemplate" class="form-control form-control-sm manage-prompt-textarea"
                                   rows="8">{{ ai_prompt }}</textarea>
+                    </div>
+                    <div class="manage-section-divider mt-4">
+                        <label class="manage-prompt-label fw-semibold mb-2">AI 작문 제안 프롬프트</label>
+                        <label class="manage-prompt-label">시스템 메시지</label>
+                        <textarea id="suggestSystem" class="form-control form-control-sm mb-3 manage-prompt-textarea"
+                                  rows="2">{{ suggest_system }}</textarea>
+                        <label class="manage-prompt-label">프롬프트 ({text} 위치에 원문이 들어감)</label>
+                        <textarea id="suggestPrompt" class="form-control form-control-sm manage-prompt-textarea"
+                                  rows="8">{{ suggest_prompt }}</textarea>
+                        <button type="button" class="btn btn-outline-dark btn-sm mt-2" onclick="saveSuggestPrompt()">
+                            제안 프롬프트 저장
+                        </button>
                     </div>
                 </div>
             </div>
@@ -355,6 +368,29 @@
             btn.textContent = '생성';
             btn.disabled = false;
         });
+    }
+
+    function saveSuggestPrompt() {
+        const systemMsg = document.getElementById('suggestSystem').value;
+        const promptTpl = document.getElementById('suggestPrompt').value;
+
+        fetch('{% url "save_suggest_prompt" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                suggest_system: systemMsg,
+                suggest_prompt: promptTpl,
+            }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) alert('저장되었습니다.');
+            else alert('오류: ' + (data.error || '알 수 없는 오류'));
+        })
+        .catch(() => alert('저장 실패'));
     }
 
     function saveTags(e, pk) {

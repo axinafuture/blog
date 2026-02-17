@@ -20,35 +20,41 @@ Django 기반 개인 블로그 프로젝트. Editor.js 블록 에디터와 OpenA
 - Editor.js 2.28 (로컬)
 - Bootstrap 5.3 (로컬)
 - OpenAI API (gpt-4o, gpt-4o-mini)
-- SQLite
+- SQLite (로컬) / MySQL (프로덕션)
 
-## 설치 및 실행
+## 로컬 설치
 
 ```bash
-# 저장소 클론
 git clone https://github.com/axinafuture/blog.git
 cd blog
-
-# 가상환경 생성 및 활성화
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 의존성 설치
 pip install -r requirements.txt
-
-# 환경변수 설정
-# .env 파일을 프로젝트 루트에 생성하고 OPENAI_API_KEY 입력
 echo "OPENAI_API_KEY=your-api-key-here" > .env
-
-# 데이터베이스 마이그레이션
 python manage.py migrate
-
-# 관리자 계정 생성
 python manage.py createsuperuser
-
-# 서버 실행
 python manage.py runserver
 ```
+
+## PythonAnywhere 배포
+
+```bash
+# Bash 콘솔에서
+git clone https://github.com/axinafuture/blog.git
+mkvirtualenv blog --python=python3.10
+cd blog
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py collectstatic
+```
+
+Web 탭 설정:
+- Source code: `/home/USERNAME/blog`
+- Virtualenv: `/home/USERNAME/.virtualenvs/blog`
+- WSGI: `load_dotenv` + `config.settings`
+- Static: `/static/` → `/home/USERNAME/blog/staticfiles`
+- Media: `/media/` → `/home/USERNAME/blog/media`
 
 ## 환경변수
 
@@ -56,6 +62,15 @@ python manage.py runserver
 
 ```
 OPENAI_API_KEY=your-api-key-here
+
+# 프로덕션 (PythonAnywhere)
+SECRET_KEY=your-secret-key
+DEBUG=False
+ALLOWED_HOSTS=USERNAME.pythonanywhere.com
+MYSQL_NAME=USERNAME$dbname
+MYSQL_USER=USERNAME
+MYSQL_PASSWORD=your-mysql-password
+MYSQL_HOST=USERNAME.mysql.pythonanywhere-services.com
 ```
 
 ## 프로젝트 구조
@@ -73,6 +88,12 @@ blog/
 
 ## 변경 이력
 
+### 2026-02-17
+- PythonAnywhere 배포 전환 (Railway에서 이전)
+- MySQL 지원 추가, WhiteNoise 제거
+- AI 제안 프롬프트 관리 페이지에서 편집 가능하도록 개선
+- Google Fonts CDN으로 NotoSansKR 전환
+
 ### 2026-02-16
 - 인라인 스타일을 페이지별 CSS 파일로 분리 (main.css, essay.css, manage.css)
 - 클래스명 체계화 — essay-/article-/manage- 접두사로 충돌 방지
@@ -80,7 +101,7 @@ blog/
 - 푸터 추가 (base.html)
 - 관리 페이지 필터 드롭다운 한 줄 배치
 
-### 2025-02-16
+### 2026-02-15
 - AI 프롬프트 편집 기능 추가 (관리 페이지에서 시스템 메시지/프롬프트 수정 가능)
 - 관리 페이지 AI 요약 카드 개선 (글 현황 표시, 생성 결과 즉시 표시)
 - 에세이 상세 페이지 추가 (사이드바 유지, 글 내용 렌더링)

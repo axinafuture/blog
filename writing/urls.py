@@ -12,4 +12,5 @@ urlpatterns = [
     path('delete/<int:pk>/', views.delete, name='delete'),
     path('image-upload/', views.image_upload, name='image_upload'),
     path('manage/ai-summary/', views.generate_ai_summary, name='generate_ai_summary'),
+    path('manage/ai-suggest-prompt/', views.save_suggest_prompt, name='save_suggest_prompt'),
 ]

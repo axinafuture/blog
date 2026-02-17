@@ -83,7 +83,7 @@ def manage(request):
     if placement:
         posts = posts.filter(placement=placement)
 
-    from .models import DEFAULT_AI_SYSTEM, DEFAULT_AI_PROMPT
+    from .models import DEFAULT_AI_SYSTEM, DEFAULT_AI_PROMPT, DEFAULT_SUGGEST_SYSTEM, DEFAULT_SUGGEST_PROMPT
     all_posts = Post.objects.all()
     ai_summary = AISummary.objects.filter(id=1).first()
 
@@ -101,6 +101,8 @@ def manage(request):
         'ai_summary': ai_summary,
         'ai_system': ai_summary.system_message if ai_summary else DEFAULT_AI_SYSTEM,
         'ai_prompt': ai_summary.prompt_template if ai_summary else DEFAULT_AI_PROMPT,
+        'suggest_system': ai_summary.suggest_system if ai_summary else DEFAULT_SUGGEST_SYSTEM,
+        'suggest_prompt': ai_summary.suggest_prompt if ai_summary else DEFAULT_SUGGEST_PROMPT,
     }
     return render(request, 'writing/manage.html', context)
 
@@ -293,6 +295,31 @@ def generate_ai_summary(request):
 
 
 @login_required
+def save_suggest_prompt(request):
+    """AI 제안 프롬프트 저장"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST only'}, status=405)
+
+    try:
+        body = json.loads(request.body)
+        suggest_system = body.get('suggest_system', '').strip()
+        suggest_prompt = body.get('suggest_prompt', '').strip()
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    if not suggest_system or not suggest_prompt:
+        return JsonResponse({'error': '프롬프트를 입력하세요.'}, status=400)
+
+    from .models import DEFAULT_SUGGEST_SYSTEM, DEFAULT_SUGGEST_PROMPT
+    summary, _ = AISummary.objects.get_or_create(id=1)
+    summary.suggest_system = suggest_system
+    summary.suggest_prompt = suggest_prompt
+    summary.save()
+
+    return JsonResponse({'success': True})
+
+
+@login_required
 def ai_suggest(request):
     """단락 텍스트에 대한 AI 작문 개선 제안"""
     if request.method != 'POST':
@@ -309,17 +336,11 @@ def ai_suggest(request):
 
     clean_text = re.sub(r'<[^>]+>', '', text)
 
-    prompt = f"""다음 문장을 더 자연스럽고 명확하게 다듬어주세요.
-
-원문:
-{clean_text}
-
-규칙:
-- 원문의 의미와 톤을 유지할 것
-- 문법, 맞춤법, 어색한 표현만 교정
-- 이미 충분히 좋은 문장이면 원문을 그대로 반환
-- 교정된 문장만 반환 (설명 없이)
-- HTML 태그 없이 순수 텍스트만 반환"""
+    from .models import AISummary, DEFAULT_SUGGEST_SYSTEM, DEFAULT_SUGGEST_PROMPT
+    ai_config = AISummary.objects.first()
+    system_msg = ai_config.suggest_system if ai_config else DEFAULT_SUGGEST_SYSTEM
+    prompt_tpl = ai_config.suggest_prompt if ai_config else DEFAULT_SUGGEST_PROMPT
+    prompt = prompt_tpl.replace('{text}', clean_text)
 
     try:
         from openai import OpenAI
@@ -327,7 +348,7 @@ def ai_suggest(request):
         response = client.chat.completions.create(
             model='gpt-4o-mini',
             messages=[
-                {'role': 'system', 'content': '당신은 글을 다듬어주는 편집자입니다. 교정된 문장만 반환합니다.'},
+                {'role': 'system', 'content': system_msg},
                 {'role': 'user', 'content': prompt},
             ],
             max_tokens=500,
