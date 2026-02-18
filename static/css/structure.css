@@ -22,6 +22,8 @@ body {
 
 
 .logo-img {
+    max-width: 100%;
+    height: auto;
     max-height: 260px;
 }
 
@@ -48,4 +50,17 @@ body {
     font-size: 0.75rem;
     color: #999;
     text-align: center;
+}
+
+/* --- 반응형 --- */
+@media (max-width: 768px) {
+    .container.mt-4 {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .site-footer {
+        margin-top: 40px;
+        padding: 24px 0;
+    }
 }

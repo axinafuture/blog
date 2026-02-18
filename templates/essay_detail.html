@@ -12,7 +12,7 @@
 {% block content %}
 <div class="row">
     <!-- 사이드바 -->
-    <div class="col-md-3">
+    <div class="col-md-3 order-md-1 order-2 mt-4 mt-md-0">
         <!-- 검색 -->
         <div class="search-box mb-4">
             <form method="get" action="{% url 'essay' %}">
@@ -34,7 +34,7 @@
     </div>
 
     <!-- 글 상세 -->
-    <div class="col-md-9">
+    <div class="col-md-9 order-md-2 order-1">
         <a href="{% url 'essay' %}" class="back-to-list">
             <span class="material-icons-outlined">arrow_back</span> 목록으로
         </a>

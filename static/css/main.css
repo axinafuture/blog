@@ -174,4 +174,12 @@
     .hero-card-title {
         font-size: 1.25rem;
     }
+
+    .ai-guide {
+        margin-top: 24px;
+    }
+
+    .sub-card-title {
+        font-size: 1rem;
+    }
 }

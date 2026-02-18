@@ -385,11 +385,31 @@
     .article-title {
         font-size: 1.4rem;
     }
+
+    .article-body {
+        font-size: 0.95rem;
+    }
+
+    .article-embed iframe {
+        height: 220px;
+    }
+
+    .essay-post-card {
+        gap: 14px;
+    }
 }
 
 @media (max-width: 576px) {
     .essay-post-card-thumb {
         width: 100px;
         height: 72px;
+    }
+
+    .essay-post-card-title {
+        font-size: 1rem;
+    }
+
+    .essay-post-card-summary {
+        -webkit-line-clamp: 1;
     }
 }
