@@ -219,11 +219,19 @@
                 image: {
                     class: ImageTool,
                     config: {
-                        endpoints: {
-                            byFile: '{% url "image_upload" %}',
+                        uploader: {
+                            async uploadByFile(file) {
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                formData.append('title', document.querySelector('.title-input').value || '');
+                                const res = await fetch('{% url "image_upload" %}', {
+                                    method: 'POST',
+                                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                                    body: formData,
+                                });
+                                return await res.json();
+                            }
                         },
-                        field: 'file',
-                        types: 'image/*',
                         captionPlaceholder: '이미지 설명 입력...',
                     }
                 },

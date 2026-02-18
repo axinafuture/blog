@@ -207,7 +207,12 @@ def image_upload(request):
         if img.mode in ('RGBA', 'P'):
             img = img.convert('RGB')
 
-        filename = f"{uuid.uuid4().hex}.jpg"
+        # 파일명: 제목_순서.jpg
+        title = request.POST.get('title', '').strip()
+        safe_title = re.sub(r'[^\w가-힣-]', '', title.replace(' ', '-'))[:30] or 'untitled'
+        existing = [f for f in os.listdir(upload_dir) if f.startswith(f"{safe_title}_")]
+        order = len(existing) + 1
+        filename = f"{safe_title}_{order}.jpg"
         filepath = os.path.join(upload_dir, filename)
         img.save(filepath, 'JPEG', quality=85)
 
