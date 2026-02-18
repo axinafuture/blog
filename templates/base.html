@@ -16,7 +16,7 @@
     <!-- 로고 컨테이너 -->
     <div class="container text-center py-3 logo-container">
         <a href="{% url 'main' %}">
-            <img src="{% static 'img/logo.png' %}" alt="Blog Logo" class="logo-img">
+            <img src="{% static 'img/logo2.png' %}" alt="Blog Logo" class="logo-img">
         </a>
     </div>
 
@@ -60,5 +60,19 @@
     </footer>
 
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    {% if not user.is_authenticated %}
+    <style>
+        body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        img { -webkit-user-drag: none; pointer-events: none; }
+    </style>
+    <script>
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && ['c','a','s','u','p'].includes(e.key.toLowerCase())) e.preventDefault();
+            if (e.key === 'F12') e.preventDefault();
+        });
+        document.addEventListener('dragstart', e => e.preventDefault());
+    </script>
+    {% endif %}
 </body>
 </html>
