@@ -13,4 +13,5 @@ urlpatterns = [
     path('image-upload/', views.image_upload, name='image_upload'),
     path('manage/ai-summary/', views.generate_ai_summary, name='generate_ai_summary'),
     path('manage/ai-suggest-prompt/', views.save_suggest_prompt, name='save_suggest_prompt'),
+    path('manage/contact/<int:pk>/', views.contact_action, name='contact_action'),
 ]

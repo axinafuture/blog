@@ -84,8 +84,11 @@ def manage(request):
         posts = posts.filter(placement=placement)
 
     from .models import DEFAULT_AI_SYSTEM, DEFAULT_AI_PROMPT, DEFAULT_SUGGEST_SYSTEM, DEFAULT_SUGGEST_PROMPT
+    from structure.models import ContactMessage
     all_posts = Post.objects.all()
     ai_summary = AISummary.objects.filter(id=1).first()
+    contact_messages = ContactMessage.objects.all()[:20]
+    unread_count = ContactMessage.objects.filter(is_read=False).count()
 
     context = {
         'posts': posts.distinct(),
@@ -103,6 +106,8 @@ def manage(request):
         'ai_prompt': ai_summary.prompt_template if ai_summary else DEFAULT_AI_PROMPT,
         'suggest_system': ai_summary.suggest_system if ai_summary else DEFAULT_SUGGEST_SYSTEM,
         'suggest_prompt': ai_summary.suggest_prompt if ai_summary else DEFAULT_SUGGEST_PROMPT,
+        'contact_messages': contact_messages,
+        'unread_count': unread_count,
     }
     return render(request, 'writing/manage.html', context)
 
@@ -326,6 +331,21 @@ def save_suggest_prompt(request):
     summary.save()
 
     return JsonResponse({'success': True})
+
+
+@login_required
+def contact_action(request, pk):
+    """문의 메시지 읽음/삭제 처리"""
+    from structure.models import ContactMessage
+    msg = get_object_or_404(ContactMessage, pk=pk)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'read':
+            msg.is_read = True
+            msg.save()
+        elif action == 'delete':
+            msg.delete()
+    return redirect('manage')
 
 
 @login_required

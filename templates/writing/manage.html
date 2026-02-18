@@ -242,6 +242,45 @@
             </div>
         </div>
 
+        <!-- 문의 메시지 -->
+        <div class="card mb-3">
+            <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                문의 메시지
+                {% if unread_count %}
+                <span class="badge bg-danger">{{ unread_count }}</span>
+                {% endif %}
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for msg in contact_messages %}
+                <li class="list-group-item {% if not msg.is_read %}manage-contact-unread{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <strong class="manage-contact-name">{{ msg.name }}</strong>
+                        <small class="text-muted">{{ msg.created_at|date:"m.d" }}</small>
+                    </div>
+                    <div class="manage-contact-email">{{ msg.email }}</div>
+                    <div class="manage-contact-message">{{ msg.message|truncatechars:80 }}</div>
+                    <div class="manage-contact-actions mt-1">
+                        {% if not msg.is_read %}
+                        <form method="post" action="{% url 'contact_action' msg.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="read">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-1">읽음</button>
+                        </form>
+                        {% endif %}
+                        <form method="post" action="{% url 'contact_action' msg.pk %}" class="d-inline"
+                              onsubmit="return confirm('삭제하시겠습니까?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">삭제</button>
+                        </form>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">문의 없음</li>
+                {% endfor %}
+            </ul>
+        </div>
+
         <!-- 태그 관리 -->
         <div class="card">
             <div class="card-header fw-semibold">태그 관리</div>

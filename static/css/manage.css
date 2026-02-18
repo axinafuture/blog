@@ -85,3 +85,29 @@
     font-size: 0.8rem;
     margin-right: 2px;
 }
+
+/* --- 문의 메시지 --- */
+.manage-contact-unread {
+    background: #f8f9ff;
+    border-left: 3px solid #4a6cf7;
+}
+
+.manage-contact-name {
+    font-size: 0.85rem;
+}
+
+.manage-contact-email {
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.manage-contact-message {
+    font-size: 0.8rem;
+    color: #555;
+    line-height: 1.5;
+}
+
+.manage-contact-actions {
+    font-size: 0.75rem;
+}

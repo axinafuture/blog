@@ -1,7 +1,8 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
 from writing.models import Post, Category, AISummary
+from .models import ContactMessage
 
 
 def main(request):
@@ -48,3 +49,29 @@ def essay_detail(request, pk):
         'categories': categories,
     }
     return render(request, 'essay_detail.html', context)
+
+
+def contact(request):
+    success = False
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip()
+        message = request.POST.get('message', '').strip()
+        if name and email and message:
+            ContactMessage.objects.create(name=name, email=email, message=message)
+            # 이메일 발송
+            from django.core.mail import send_mail
+            from django.conf import settings
+            if settings.CONTACT_EMAIL:
+                try:
+                    send_mail(
+                        subject=f'[커피앤티 메시지] {name}',
+                        message=f'보낸 사람: {name}\n이메일: {email}\n\n{message}',
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[settings.CONTACT_EMAIL],
+                    )
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f'이메일 발송 실패: {e}')
+            success = True
+    return render(request, 'contact.html', {'success': success})

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/contact.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="contact-wrap">
+    <h2 class="contact-title">Contact</h2>
+    <p class="contact-desc">궁금한 점이나 제안이 있으시면 아래 폼을 통해 메시지를 남겨주세요.</p>
+
+    {% if success %}
+    <div class="contact-success">
+        메시지가 성공적으로 전송되었습니다. 감사합니다!
+    </div>
+    {% else %}
+    <form method="post" class="contact-form">
+        {% csrf_token %}
+        <div class="contact-field">
+            <label for="name">이름</label>
+            <input type="text" id="name" name="name" required placeholder="이름을 입력하세요">
+        </div>
+        <div class="contact-field">
+            <label for="email">이메일</label>
+            <input type="email" id="email" name="email" required placeholder="이메일을 입력하세요">
+        </div>
+        <div class="contact-field">
+            <label for="message">메시지</label>
+            <textarea id="message" name="message" rows="6" required placeholder="메시지를 입력하세요"></textarea>
+        </div>
+        <button type="submit" class="contact-submit">보내기</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
