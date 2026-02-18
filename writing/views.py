@@ -184,18 +184,27 @@ def delete(request, pk):
 @login_required
 @csrf_exempt
 def image_upload(request):
-    """에디터 이미지 업로드 처리"""
+    """에디터 이미지 업로드 처리 (큰 이미지 자동 리사이즈)"""
     if request.method == 'POST' and request.FILES.get('file'):
         image = request.FILES['file']
-        ext = os.path.splitext(image.name)[1]
-        filename = f"{uuid.uuid4().hex}{ext}"
         upload_dir = os.path.join(settings.MEDIA_ROOT, 'editor', 'images')
         os.makedirs(upload_dir, exist_ok=True)
-        filepath = os.path.join(upload_dir, filename)
 
-        with open(filepath, 'wb+') as f:
-            for chunk in image.chunks():
-                f.write(chunk)
+        from PIL import Image
+        img = Image.open(image)
+        max_width = 1600
+
+        if img.width > max_width:
+            ratio = max_width / img.width
+            new_size = (max_width, int(img.height * ratio))
+            img = img.resize(new_size, Image.LANCZOS)
+
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+
+        filename = f"{uuid.uuid4().hex}.jpg"
+        filepath = os.path.join(upload_dir, filename)
+        img.save(filepath, 'JPEG', quality=85)
 
         url = f"{settings.MEDIA_URL}editor/images/{filename}"
         return JsonResponse({'success': 1, 'file': {'url': url}})
