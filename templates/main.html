@@ -13,8 +13,6 @@
     <div class="col-md-8">
         {% if main_posts %}
             {% for post in main_posts %}
-                {% if forloop.first %}
-                <!-- 히어로 카드 -->
                 <a href="{% url 'essay_detail' post.pk %}" class="main-card hero-card">
                     <div class="hero-card-body">
                         <div class="hero-card-title main-card-title">{{ post.title }}</div>
@@ -29,16 +27,6 @@
                     </div>
                     {% endif %}
                 </a>
-                {% else %}
-                <!-- 하위 카드 -->
-                <a href="{% url 'essay_detail' post.pk %}" class="main-card sub-card">
-                    {% if post.category %}
-                    <div class="sub-card-category">{{ post.category.name }}</div>
-                    {% endif %}
-                    <div class="sub-card-title main-card-title">{{ post.title }}</div>
-                    <div class="sub-card-meta">{{ post.created_at|date:"Y.m.d" }}</div>
-                </a>
-                {% endif %}
             {% endfor %}
         {% else %}
             <p class="main-empty-state">등록된 글이 없습니다.</p>
