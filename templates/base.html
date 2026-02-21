@@ -41,6 +41,9 @@
                 {% if user.is_authenticated %}
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manage' %}">블로그 관리</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'logout' %}">로그아웃</a>
                     </li>
                 </ul>
